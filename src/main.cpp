@@ -1,6 +1,5 @@
 #include <Arduino.h>
 
-#include <HardwareSerial.h>
 #define resetPin 23
 #define trigPin 21
 #define echoPin 19
@@ -63,9 +62,6 @@ void setup()
 void loop()
 {
 
-  // Clear the trigPin by setting it LOW:
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(5);
   // Trigger the sensor by setting the trigPin high for 10 microseconds:
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
@@ -82,7 +78,9 @@ void loop()
   Serial.print(distance);
   Serial.println(" cm");
 
-  delay(100);
+  delay(1000);
+
+  checkButton();
 }
 
 void updateSerial()
@@ -97,7 +95,8 @@ void updateSerial()
   //   GSM.write(Serial.read()); //Forward what Software Serial received to Serial Port
   // }
 }
-void chekcButton()
+
+void checkButton()
 {
 
   // put your main code here, to run repeatedly:
