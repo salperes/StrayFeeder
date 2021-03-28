@@ -9,13 +9,22 @@ HardwareSerial GSM(2);
 long duration;
 int distance;
 
+TaskHandle_t taskCore0;
+TaskHandle_t taskCore1;
+
 void updateSerial(void);
 //void updateSerial(HardwareSerial &);
 void printMenu(void);
 void serialFlush(void);
 void sendSMS(void);
+void gsmInit(void);
 void resetSim800(void);
 void checkButton(void);
+void checkDistance(void);
+
+void codeCore0(void *pvParameters);
+void codeCore1(void *pvParameters);
+
 void setup()
 {
 
@@ -25,41 +34,43 @@ void setup()
   pinMode(resetPin, OUTPUT);
   digitalWrite(resetPin, HIGH);
 
-  GSM.begin(115200);
   Serial.begin(115200);
   Serial.println("Starting");
-  serialFlush();
-  GSM.println("AT");
-  updateSerial();
-  GSM.println("ATI");
-  updateSerial();
-  GSM.println("AT+CPIN?");
-  updateSerial();
-
-  GSM.println("AT+CSQ"); //Signal quality test, value range is 0-31 , 31 is the best
-  updateSerial();
-  GSM.println("AT+CCID"); //Read SIM information to confirm whether the SIM is plugged
-  updateSerial();
-  GSM.println("AT+GSN"); //Read SIM information to confirm whether the SIM is plugged
-  updateSerial();
-  GSM.println("AT+CREG?"); //Check whether it has registered in the network
-  updateSerial();
-  //GSM.println("AT+CBAND=\"DCS_MODE\""); //Check whether it has registered in the network
-  GSM.println("AT+CPOL?");
-  updateSerial();
-
-  // GSM.println("AT+CNETSCAN"); //Check whether it has registered in the network
-  // delay(30000);
-  // updateSerial();
-
-  serialFlush();
-  // put your setup code here, to run once:
+  gsmInit();
 
   Serial.printf("CPU ID = %d", xPortGetCoreID());
   Serial.println();
+  xTaskCreatePinnedToCore(
+      codeCore0,   /* Function to implement the task */
+      "taskCore0", /* Name of the task */
+      10000,       /* Stack size in words */
+      NULL,        /* Task input parameter */
+      0,           /* Priority of the task */
+      &taskCore0,  /* Task handle. */
+      0);          /* Core where the task should run */
 }
 
 void loop()
+{
+
+  //checkDistance();
+  delay(1000);
+
+  checkButton();
+}
+
+void codeCore0(void *pvParameters)
+{
+  Serial.print("Task1 running on core ");
+  Serial.println(xPortGetCoreID());
+  for (;;)
+  {
+    checkDistance();
+    delay(10000);
+  }
+}
+
+void checkDistance()
 {
 
   // Trigger the sensor by setting the trigPin high for 10 microseconds:
@@ -77,10 +88,6 @@ void loop()
   Serial.print("Distance = ");
   Serial.print(distance);
   Serial.println(" cm");
-
-  delay(1000);
-
-  checkButton();
 }
 
 void updateSerial()
@@ -241,8 +248,38 @@ void sendSMS()
 
 void resetSim800()
 {
-
   digitalWrite(resetPin, LOW);
   delay(100);
   digitalWrite(resetPin, HIGH);
+}
+
+void gsmInit()
+{
+  GSM.begin(115200);
+  serialFlush();
+  GSM.println("AT");
+  updateSerial();
+  GSM.println("ATI");
+  updateSerial();
+  GSM.println("AT+CPIN?");
+  updateSerial();
+
+  GSM.println("AT+CSQ"); //Signal quality test, value range is 0-31 , 31 is the best
+  updateSerial();
+  GSM.println("AT+CCID"); //Read SIM information to confirm whether the SIM is plugged
+  updateSerial();
+  GSM.println("AT+GSN"); //Read SIM information to confirm whether the SIM is plugged
+  updateSerial();
+  GSM.println("AT+CREG?"); //Check whether it has registered in the network
+  updateSerial();
+  //GSM.println("AT+CBAND=\"DCS_MODE\""); //Check whether it has registered in the network
+  GSM.println("AT+CPOL?");
+  updateSerial();
+
+  // GSM.println("AT+CNETSCAN"); //Check whether it has registered in the network
+  // delay(30000);
+  // updateSerial();
+
+  serialFlush();
+  // put your setup code here, to run once:
 }
