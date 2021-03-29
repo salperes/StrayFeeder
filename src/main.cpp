@@ -3,6 +3,8 @@
 #define resetPin 23
 #define trigPin 21
 #define echoPin 19
+#define core0LED 2
+#define core1LED 4
 HardwareSerial GSM(2);
 
 // Define variables:
@@ -31,6 +33,13 @@ void setup()
   // Define inputs and outputs
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
+
+  pinMode(core0LED, OUTPUT);
+  digitalWrite(core0LED, LOW);
+
+  pinMode(core1LED, OUTPUT);
+  digitalWrite(core1LED, LOW);
+
   pinMode(resetPin, OUTPUT);
   digitalWrite(resetPin, HIGH);
 
@@ -54,7 +63,10 @@ void loop()
 {
 
   //checkDistance();
-  delay(1000);
+  digitalWrite(core1LED, HIGH);
+  delay(500);
+  digitalWrite(core1LED, LOW);
+  delay(500);
 
   checkButton();
 }
@@ -65,7 +77,13 @@ void codeCore0(void *pvParameters)
   Serial.println(xPortGetCoreID());
   for (;;)
   {
+    digitalWrite(core0LED, HIGH);
+    //digitalWrite(core1LED, HIGH);
     checkDistance();
+    delay(500);
+    digitalWrite(core0LED, LOW);
+    //digitalWrite(core1LED, LOW);
+
     delay(10000);
   }
 }
